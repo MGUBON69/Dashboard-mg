@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MG Dealer Booking Dashboard & Analytics</title>
+    <title>MG Dealer Booking Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -11,29 +11,25 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: { 50:'#ecfeff',100:'#cffaff',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',900:'#164e63' },
-                        darkbg: '#0f172a',
-                        darkcard: '#1e293b',
-                        darkborder: '#334155'
+                        brand: { 50:'#ecfeff',400:'#22d3ee',500:'#06b6d4',600:'#0891b2' }
                     },
-                    fontFamily: { sans: ['Kanit', 'Prompt', 'Inter', 'sans-serif'] }
+                    fontFamily: { sans: ['Kanit', 'sans-serif'] }
                 }
             }
         }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Kanit', sans-serif; background-color: #0b0f19; color: #f1f5f9; }
         .glow-card {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            background: linear-gradient(135deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0.9) 100%);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255,255,255,0.08);
         }
-        .glow-card:hover { border-color: rgba(6, 182, 212, 0.4); box-shadow: 0 0 20px rgba(6, 182, 212, 0.15); }
+        .glow-card:hover { border-color: rgba(6,182,212,0.4); box-shadow: 0 0 20px rgba(6,182,212,0.15); }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
@@ -62,14 +58,14 @@
                 <p class="text-xs text-slate-400">ระบบติดตามสถานะการจอง วิเคราะห์ยอดขาย และส่งมอบรถยนต์ MG</p>
             </div>
         </div>
-        <div class="flex items-center gap-2 sm:gap-3">
-            <button onclick="openAppsScriptModal()" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-900/50 transition flex items-center gap-2">
-                <i class="fa-solid fa-code"></i>
-                <span>วิธีติดตั้ง App Script</span>
+        <div class="flex items-center gap-2">
+            <!-- ปุ่มรีเฟรช -->
+            <button onclick="reloadData()" id="reloadBtn" class="px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-900/50 transition flex items-center gap-2">
+                <i class="fa-solid fa-rotate-right" id="refreshIcon"></i> รีเฟรช
             </button>
-            <button onclick="toggleConnectionModal()" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold shadow-lg transition flex items-center gap-2">
-                <i class="fa-solid fa-link"></i>
-                <span id="connBtnText">เชื่อมต่อ Google Sheets</span>
+            <!-- ปุ่มเปลี่ยนลิงก์ (ซ่อนไว้ กดได้ถ้าต้องการ) -->
+            <button onclick="toggleConnectionModal()" class="p-2 rounded-xl text-xs bg-slate-800/50 hover:bg-slate-700 text-slate-500 hover:text-slate-300 transition" title="เปลี่ยนการเชื่อมต่อ">
+                <i class="fa-solid fa-gear"></i>
             </button>
         </div>
     </header>
@@ -80,39 +76,20 @@
         <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div class="relative flex h-3 w-3">
-                  <span id="statusPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                  <span id="statusDot" class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                  <span id="statusPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span id="statusDot" class="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
                 </div>
                 <div>
                     <span class="text-xs text-slate-400">สถานะข้อมูล: </span>
-                    <span id="dataStatusText" class="text-sm font-semibold text-amber-400">ยังไม่ได้เชื่อมต่อ</span>
+                    <span id="dataStatusText" class="text-sm font-semibold text-cyan-400">กำลังโหลดข้อมูล...</span>
                     <span id="lastUpdated" class="text-xs text-slate-500 ml-2"></span>
                 </div>
             </div>
-            <button onclick="reloadData()" id="reloadBtn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 border border-slate-700 flex items-center gap-1.5 disabled:opacity-50" disabled>
-                <i class="fa-solid fa-rotate-right" id="refreshIcon"></i> รีเฟรชข้อมูล
-            </button>
-        </div>
-
-        <!-- Empty State -->
-        <div id="emptyState" class="glow-card rounded-2xl p-12 border border-slate-800 text-center">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-slate-800 rounded-full mb-4">
-                <i class="fa-solid fa-link-slash text-3xl text-slate-500"></i>
-            </div>
-            <h2 class="text-xl font-bold text-white mb-2">ยังไม่ได้เชื่อมต่อ Google Sheets</h2>
-            <p class="text-slate-400 mb-6 max-w-md mx-auto">กรุณาติดตั้ง Google Apps Script และวาง Web App URL เพื่อเริ่มใช้งาน Dashboard</p>
-            <div class="flex items-center justify-center gap-3">
-                <button onclick="openAppsScriptModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-900/50 transition flex items-center gap-2">
-                    <i class="fa-solid fa-code"></i> ดูวิธีติดตั้ง
-                </button>
-                <button onclick="toggleConnectionModal()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold transition flex items-center gap-2">
-                    <i class="fa-solid fa-plug"></i> ตั้งค่าการเชื่อมต่อ
-                </button>
-            </div>
+            <div class="text-xs text-slate-500" id="recordCount">0 รายการ</div>
         </div>
 
         <!-- Loading State -->
-        <div id="loadingState" class="hidden space-y-4">
+        <div id="loadingState" class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="glow-card rounded-2xl p-5 border border-slate-800"><div class="skeleton h-4 w-24 mb-2"></div><div class="skeleton h-8 w-16"></div></div>
                 <div class="glow-card rounded-2xl p-5 border border-slate-800"><div class="skeleton h-4 w-24 mb-2"></div><div class="skeleton h-8 w-16"></div></div>
@@ -148,31 +125,31 @@
             <!-- KPI Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
-                    <div class="absolute -right-2 -bottom-2 text-slate-800 opacity-30 text-7xl font-bold pointer-events-none"><i class="fa-solid fa-file-signature"></i></div>
+                    <div class="absolute -right-2 -bottom-2 text-slate-800 opacity-30 text-7xl pointer-events-none"><i class="fa-solid fa-file-signature"></i></div>
                     <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">ยอดจองทั้งหมด</div>
                     <div class="text-3xl font-bold text-white tracking-tight" id="kpiTotal">0</div>
                     <div class="text-xs text-cyan-400 mt-2 flex items-center gap-1"><i class="fa-solid fa-car"></i> รวมทุกรายการ</div>
                 </div>
                 <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
-                    <div class="absolute -right-2 -bottom-2 text-emerald-950 opacity-40 text-7xl font-bold pointer-events-none"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="absolute -right-2 -bottom-2 text-emerald-950 opacity-40 text-7xl pointer-events-none"><i class="fa-solid fa-circle-check"></i></div>
                     <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">ส่งมอบแล้ว</div>
                     <div class="text-3xl font-bold text-emerald-400 tracking-tight" id="kpiDelivered">0</div>
                     <div class="text-xs text-emerald-500/80 mt-2 flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> ปิดการขาย</div>
                 </div>
                 <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
-                    <div class="absolute -right-2 -bottom-2 text-amber-950 opacity-40 text-7xl font-bold pointer-events-none"><i class="fa-solid fa-clock"></i></div>
+                    <div class="absolute -right-2 -bottom-2 text-amber-950 opacity-40 text-7xl pointer-events-none"><i class="fa-solid fa-clock"></i></div>
                     <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">รอส่งมอบ (เดือนนี้)</div>
                     <div class="text-3xl font-bold text-amber-400 tracking-tight" id="kpiPendingThisMonth">0</div>
                     <div class="text-xs text-amber-500/80 mt-2 flex items-center gap-1"><i class="fa-solid fa-calendar-day"></i> พร้อมส่ง</div>
                 </div>
                 <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
-                    <div class="absolute -right-2 -bottom-2 text-blue-950 opacity-40 text-7xl font-bold pointer-events-none"><i class="fa-solid fa-calendar-alt"></i></div>
+                    <div class="absolute -right-2 -bottom-2 text-blue-950 opacity-40 text-7xl pointer-events-none"><i class="fa-solid fa-calendar-alt"></i></div>
                     <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">รอส่งมอบ (เดือนอื่น)</div>
                     <div class="text-3xl font-bold text-blue-400 tracking-tight" id="kpiPendingOtherMonth">0</div>
                     <div class="text-xs text-blue-400/80 mt-2 flex items-center gap-1"><i class="fa-solid fa-hourglass-half"></i> คิวล่วงหน้า</div>
                 </div>
                 <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
-                    <div class="absolute -right-2 -bottom-2 text-rose-950 opacity-40 text-7xl font-bold pointer-events-none"><i class="fa-solid fa-circle-xmark"></i></div>
+                    <div class="absolute -right-2 -bottom-2 text-rose-950 opacity-40 text-7xl pointer-events-none"><i class="fa-solid fa-circle-xmark"></i></div>
                     <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">ยกเลิก / ไม่ผ่าน</div>
                     <div class="text-3xl font-bold text-rose-400 tracking-tight" id="kpiCanceled">0</div>
                     <div class="text-xs text-rose-500/80 mt-2 flex items-center gap-1"><i class="fa-solid fa-ban"></i> ไม่ผ่านเงื่อนไข</div>
@@ -184,28 +161,24 @@
                 <div class="glow-card rounded-2xl p-5 border border-slate-800">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-base font-semibold text-white flex items-center gap-2"><i class="fa-solid fa-car text-cyan-400"></i> ยอดจองแยกตามรุ่นรถ</h3>
-                        <span class="text-xs text-slate-500">คอลัมน์ E</span>
                     </div>
                     <div class="h-64 relative"><canvas id="modelChart"></canvas></div>
                 </div>
                 <div class="glow-card rounded-2xl p-5 border border-slate-800">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-base font-semibold text-white flex items-center gap-2"><i class="fa-solid fa-chart-pie text-cyan-400"></i> สัดส่วนสถานะการจอง</h3>
-                        <span class="text-xs text-slate-500">คอลัมน์ I</span>
                     </div>
                     <div class="h-64 relative flex items-center justify-center"><canvas id="statusChart"></canvas></div>
                 </div>
                 <div class="glow-card rounded-2xl p-5 border border-slate-800">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-base font-semibold text-white flex items-center gap-2"><i class="fa-solid fa-building-columns text-cyan-400"></i> สถาบันการเงิน / ไฟแนนซ์</h3>
-                        <span class="text-xs text-slate-500">คอลัมน์ H</span>
                     </div>
                     <div class="h-64 relative"><canvas id="financeChart"></canvas></div>
                 </div>
                 <div class="glow-card rounded-2xl p-5 border border-slate-800">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-base font-semibold text-white flex items-center gap-2"><i class="fa-solid fa-user-tie text-cyan-400"></i> ผลงานพนักงานขาย (SC)</h3>
-                        <span class="text-xs text-slate-500">คอลัมน์ L</span>
                     </div>
                     <div class="h-64 relative"><canvas id="scChart"></canvas></div>
                 </div>
@@ -224,7 +197,7 @@
                             <input type="text" id="searchInput" oninput="applyFilters()" placeholder="ค้นหา..." class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 outline-none">
                         </div>
                         <select id="filterModel" onchange="applyFilters()" class="bg-slate-950 border border-slate-700 focus:border-cyan-500 text-slate-300 text-xs rounded-xl px-3 py-1.5 outline-none">
-                            <option value="">รุ่นรถทั้งหมด</option>
+                            <option value="">รุ่นทั้งหมด</option>
                         </select>
                         <select id="filterStatus" onchange="applyFilters()" class="bg-slate-950 border border-slate-700 focus:border-cyan-500 text-slate-300 text-xs rounded-xl px-3 py-1.5 outline-none">
                             <option value="">สถานะทั้งหมด</option>
@@ -246,7 +219,7 @@
                                 <th class="px-4 py-3.5 font-medium">รุ่นย่อย (F)</th>
                                 <th class="px-4 py-3.5 font-medium">สี (G)</th>
                                 <th class="px-4 py-3.5 font-medium">สถาบันการเงิน (H)</th>
-                                <th class="px-4 py-3.5 font-medium">สถานะการจอง (I)</th>
+                                <th class="px-4 py-3.5 font-medium">สถานะ (I)</th>
                                 <th class="px-4 py-3.5 font-medium">สถานะรถ (J)</th>
                                 <th class="px-4 py-3.5 font-medium">หมายเหตุ (K)</th>
                                 <th class="px-4 py-3.5 font-medium">SC (L)</th>
@@ -259,166 +232,124 @@
         </div>
     </main>
 
-    <!-- Modal: Apps Script Setup -->
-    <div id="scriptModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
-                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-brands fa-google-drive text-cyan-400"></i> วิธีติดตั้ง Google Apps Script</h3>
-                <button onclick="closeAppsScriptModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-300">
-                <div class="bg-cyan-950/40 border border-cyan-800/60 p-4 rounded-xl text-cyan-200">
-                    <p class="font-semibold text-cyan-400 mb-1"><i class="fa-solid fa-lightbulb"></i> คำแนะนำ:</p>
-                    คัดลอกโค้ดด้านล่างนี้ไปวางใน Google Sheet เพื่อเปิด API
-                </div>
-                <ol class="list-decimal list-inside space-y-2">
-                    <li>เปิด Google Sheet ของคุณ</li>
-                    <li>ไปที่ <strong class="text-white">Extensions</strong> &gt; <strong class="text-white">Apps Script</strong></li>
-                    <li>วางโค้ดด้านล่าง → กด Save</li>
-                    <li>กด <strong class="text-emerald-400">Deploy</strong> → <strong class="text-emerald-400">New Deployment</strong></li>
-                    <li>เลือก <strong class="text-white">Web App</strong> → Access: <strong class="text-amber-400">Anyone</strong></li>
-                    <li>Deploy แล้วคัดลอก URL มาเชื่อมต่อ</li>
-                </ol>
-                <div class="relative mt-3">
-                    <div class="flex justify-between items-center bg-slate-950 px-4 py-2 border-t border-x border-slate-800 rounded-t-xl">
-                        <span class="text-xs text-slate-400 font-mono">Code.gs</span>
-                        <button onclick="copyAppsScriptCode()" class="text-xs bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-1 rounded border border-slate-700 flex items-center gap-1.5">
-                            <i class="fa-solid fa-copy"></i> <span id="copyBtnText">คัดลอกโค้ด</span>
-                        </button>
-                    </div>
-                    <pre class="bg-slate-950 p-4 rounded-b-xl text-emerald-400 font-mono text-xs overflow-x-auto border border-slate-800 max-h-72" id="appScriptCodeText">function doGet(e) {
-  try {
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
-    var sheetName = "DEALER BK INPUT V2";
-    var sheet = ss.getSheetByName(sheetName);
-    if (!sheet) return jsonResponse({ error: "Sheet not found" });
-    var startRow = 4, startCol = 5, numCols = 8;
-    var maxRow = sheet.getLastRow(), lastRow = maxRow;
-    if (maxRow >= startRow) {
-      var colE = sheet.getRange(startRow, startCol, maxRow - startRow + 1, 1).getValues();
-      lastRow = colE.filter(String).length + startRow - 1;
-    }
-    var data = [];
-    if (lastRow >= startRow) {
-      var rawData = sheet.getRange(startRow, startCol, lastRow - startRow + 1, numCols).getValues();
-      for (var i = 0; i &lt; rawData.length; i++) {
-        var row = rawData[i];
-        if (row[0] !== "") {
-          var bs = row[4] ? row[4].toString().trim() : "";
-          if (bs.toLowerCase().includes("ไม่ผ่าน")) bs = "ยกเลิก (ไม่ผ่านเงื่อนไข)";
-          data.push({
-            model: row[0] ? row[0].toString().trim() : "",
-            subModel: row[1] ? row[1].toString().trim() : "",
-            color: row[2] ? row[2].toString().trim() : "",
-            finance: row[3] ? row[3].toString().trim() : "",
-            bookingStatus: bs,
-            carStatus: row[5] ? row[5].toString().trim() : "",
-            note: row[6] ? row[6].toString().trim() : "",
-            sc: row[7] ? row[7].toString().trim() : ""
-          });
-        }
-      }
-    }
-    if (e && e.parameter) {
-      if (e.parameter.model) data = data.filter(r => r.model === e.parameter.model);
-      if (e.parameter.sc) data = data.filter(r => r.sc === e.parameter.sc);
-      if (e.parameter.status) data = data.filter(r => r.bookingStatus === e.parameter.status);
-    }
-    return jsonResponse({
-      totalRecords: data.length,
-      lastUpdate: Utilities.formatDate(new Date(), "Asia/Bangkok", "yyyy-MM-dd HH:mm:ss"),
-      data: data
-    });
-  } catch (err) { return jsonResponse({ error: err.message }); }
-}
-function jsonResponse(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
-}</pre>
-                </div>
-            </div>
-            <div class="p-4 border-t border-slate-800 bg-slate-950/50 flex justify-end">
-                <button onclick="closeAppsScriptModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl">ปิด</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Connection -->
+    <!-- Modal: เปลี่ยนลิงก์ (เผื่อต้องการแก้ไข) -->
     <div id="connModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-link text-cyan-400"></i> ตั้งค่าการเชื่อมต่อ</h3>
+                <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-link text-cyan-400"></i> เปลี่ยนการเชื่อมต่อ</h3>
                 <button onclick="toggleConnectionModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="space-y-3 text-xs">
                 <label class="block text-slate-300 font-medium">Web App URL:</label>
-                <input type="text" id="webAppUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xl px-3 py-2 text-slate-200 outline-none font-mono text-[11px]">
+                <input type="text" id="webAppUrlInput" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xl px-3 py-2 text-slate-200 outline-none font-mono text-[11px]">
+                <p class="text-slate-500 text-[11px]">ค่าเริ่มต้นจะดึงจากตัวแปรในโค้ด หากต้องการเปลี่ยนให้กรอกที่นี่</p>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2 pt-2">
-                <button onclick="saveAndConnect()" class="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plug"></i> เชื่อมต่อ
+            <div class="flex gap-2 pt-2">
+                <button onclick="saveAndConnect()" class="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs transition">
+                    <i class="fa-solid fa-plug"></i> บันทึกและเชื่อมต่อ
                 </button>
-                <button onclick="disconnectSheet()" class="px-4 py-2 bg-rose-900/50 hover:bg-rose-800/50 text-rose-300 font-medium rounded-xl text-xs transition border border-rose-800/50 flex items-center gap-2">
-                    <i class="fa-solid fa-link-slash"></i> ยกเลิก
+                <button onclick="resetToDefault()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs transition">
+                    <i class="fa-solid fa-rotate-left"></i> ใช้ค่าเริ่มต้น
                 </button>
             </div>
         </div>
     </div>
 
     <script>
+        // ============================================
+        // 🔑 ใส่ลิงก์ Apps Script ของคุณตรงนี้ (สำคัญ!)
+        // ============================================
+        const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNi0U6EDUEk7mcKdDQQItbm5Zy8KvHHfmz21zfDExkydb2IQ3iBW9dOpTfnfrbcabJlQ/exec";
+        // ============================================
+
         let rawData = [], filteredData = [];
-        let webAppUrl = localStorage.getItem('mg_script_url') || '';
+        let webAppUrl = localStorage.getItem('mg_custom_url') || APPS_SCRIPT_URL;
         let isLoading = false;
         let modelChartInst = null, statusChartInst = null, financeChartInst = null, scChartInst = null;
 
+        // ✅ ดึงข้อมูลทันทีเมื่อโหลดหน้า
         window.onload = function() {
-            if (webAppUrl) {
-                document.getElementById('webAppUrlInput').value = webAppUrl;
-                fetchData();
-            } else {
-                showEmpty();
-            }
+            document.getElementById('webAppUrlInput').value = webAppUrl;
+            fetchData();
         };
 
-        function showEmpty() { hideAll(); document.getElementById('emptyState').classList.remove('hidden'); updateStatus('disconnected', 'ยังไม่ได้เชื่อมต่อ'); document.getElementById('reloadBtn').disabled = true; }
-        function showLoading() { hideAll(); document.getElementById('loadingState').classList.remove('hidden'); document.getElementById('dataStatusText').textContent = 'กำลังโหลด...'; document.getElementById('dataStatusText').className = 'text-sm font-semibold text-cyan-400'; }
-        function showError(msg) { hideAll(); document.getElementById('errorState').classList.remove('hidden'); document.getElementById('errorMessage').textContent = msg; updateStatus('error', 'เกิดข้อผิดพลาด'); document.getElementById('reloadBtn').disabled = false; }
-        function showMain() { hideAll(); document.getElementById('mainContent').classList.remove('hidden'); document.getElementById('reloadBtn').disabled = false; }
-        function hideAll() { ['emptyState','loadingState','errorState','mainContent'].forEach(id => document.getElementById(id).classList.add('hidden')); }
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            updateStatus('loading', 'กำลังโหลดข้อมูล...');
+        }
+
+        function showError(msg) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('errorState').classList.remove('hidden');
+            document.getElementById('errorMessage').textContent = msg;
+            updateStatus('error', 'เกิดข้อผิดพลาด');
+        }
+
+        function showMain() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('mainContent').classList.remove('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+        }
 
         function fetchData() {
-            if (!webAppUrl) { showEmpty(); return; }
-            isLoading = true; showLoading();
+            if (!webAppUrl || webAppUrl.includes('AKfycby...')) {
+                showError("กรุณาใส่ลิงก์ APPS_SCRIPT_URL ในโค้ดก่อน");
+                return;
+            }
+            isLoading = true;
+            showLoading();
             document.getElementById('refreshIcon').classList.add('fa-spin');
+
             const ctrl = new AbortController();
             const to = setTimeout(() => ctrl.abort(), 15000);
+
             fetch(webAppUrl, { signal: ctrl.signal })
-                .then(res => { clearTimeout(to); if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
+                .then(res => {
+                    clearTimeout(to);
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.json();
+                })
                 .then(result => {
                     if (result.error) throw new Error(result.error);
                     rawData = Array.isArray(result) ? result : (result.data || []);
-                    if (rawData.length === 0) { showError("ไม่พบข้อมูลใน Sheet"); return; }
-                    updateStatus('connected', `เชื่อมต่อสำเร็จ - ${rawData.length} รายการ`, result.lastUpdate);
-                    showMain(); processData();
+                    if (rawData.length === 0) {
+                        showError("ไม่พบข้อมูลใน Sheet");
+                        return;
+                    }
+                    updateStatus('connected', `เชื่อมต่อสำเร็จ`, result.lastUpdate);
+                    document.getElementById('recordCount').textContent = `${rawData.length} รายการ`;
+                    showMain();
+                    processData();
                 })
                 .catch(err => {
                     let msg = err.message;
-                    if (err.name === 'AbortError') msg = "Timeout - ตรวจสอบ URL หรืออินเทอร์เน็ต";
+                    if (err.name === 'AbortError') msg = "Timeout - ตรวจสอบอินเทอร์เน็ต";
                     else if (msg.includes('Failed to fetch')) msg = "ไม่สามารถเข้าถึง URL - ตรวจสอบการ Deploy";
-                    showError(msg); rawData = [];
+                    showError(msg);
+                    rawData = [];
                 })
-                .finally(() => { isLoading = false; document.getElementById('refreshIcon').classList.remove('fa-spin'); });
+                .finally(() => {
+                    isLoading = false;
+                    document.getElementById('refreshIcon').classList.remove('fa-spin');
+                });
         }
 
-        function reloadData() { if (webAppUrl && !isLoading) fetchData(); }
+        function reloadData() { if (!isLoading) fetchData(); }
 
         function updateStatus(state, msg, lastUpdate) {
-            const colors = { connected: ['bg-emerald-500','bg-emerald-400','text-emerald-400'], disconnected: ['bg-amber-500','bg-amber-400','text-amber-400'], error: ['bg-rose-500','bg-rose-400','text-rose-400'] };
-            const c = colors[state] || colors.disconnected;
+            const colors = {
+                connected: ['bg-emerald-500','bg-emerald-400','text-emerald-400'],
+                loading: ['bg-cyan-500','bg-cyan-400','text-cyan-400'],
+                error: ['bg-rose-500','bg-rose-400','text-rose-400']
+            };
+            const c = colors[state] || colors.loading;
             document.getElementById('statusDot').className = `relative inline-flex rounded-full h-3 w-3 ${c[0]}`;
             document.getElementById('statusPulse').className = `animate-ping absolute inline-flex h-full w-full rounded-full ${c[1]} opacity-75`;
             document.getElementById('dataStatusText').className = `text-sm font-semibold ${c[2]}`;
             document.getElementById('dataStatusText').textContent = msg;
-            document.getElementById('connBtnText').innerText = state === 'connected' ? "เชื่อมต่อแล้ว" : "เชื่อมต่อ Sheets";
             if (lastUpdate) document.getElementById('lastUpdated').innerText = `(ล่าสุด: ${lastUpdate})`;
             else if (state === 'connected') document.getElementById('lastUpdated').innerText = `(เมื่อ: ${new Date().toLocaleTimeString('th-TH')})`;
             else document.getElementById('lastUpdated').innerText = '';
@@ -430,7 +361,8 @@ function jsonResponse(obj) {
                 finance: i.finance || '', status: i.bookingStatus || i.status || '',
                 carStatus: i.carStatus || '', note: i.note || '', sc: i.sc || ''
             }));
-            populateFilters(); applyFilters();
+            populateFilters();
+            applyFilters();
         }
 
         function populateFilters() {
@@ -501,8 +433,8 @@ function jsonResponse(obj) {
                 if (d.finance) fc[d.finance] = (fc[d.finance] || 0) + 1;
                 if (d.sc) scc[d.sc] = (scc[d.sc] || 0) + 1;
             });
-            const bo = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, animation: { duration: 800, easing: 'easeOutQuart' } };
-            
+            const bo = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, animation: { duration: 800 } };
+
             if (modelChartInst) modelChartInst.destroy();
             modelChartInst = new Chart(document.getElementById('modelChart'), {
                 type: 'bar',
@@ -555,43 +487,25 @@ function jsonResponse(obj) {
 
         function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-        function openAppsScriptModal() { document.getElementById('scriptModal').classList.remove('hidden'); }
-        function closeAppsScriptModal() { document.getElementById('scriptModal').classList.add('hidden'); }
         function toggleConnectionModal() {
             document.getElementById('connModal').classList.toggle('hidden');
-            if (webAppUrl) document.getElementById('webAppUrlInput').value = webAppUrl;
         }
+
         function saveAndConnect() {
             const u = document.getElementById('webAppUrlInput').value.trim();
             if (!u) { alert('กรุณากรอก URL'); return; }
-            if (!u.startsWith('https://script.google.com/macros/s/')) { alert('URL ไม่ถูกต้อง'); return; }
+            localStorage.setItem('mg_custom_url', u);
             webAppUrl = u;
-            localStorage.setItem('mg_script_url', webAppUrl);
             toggleConnectionModal();
             fetchData();
         }
-        function disconnectSheet() {
-            if (confirm('ยกเลิกการเชื่อมต่อ?')) {
-                webAppUrl = '';
-                localStorage.removeItem('mg_script_url');
-                document.getElementById('webAppUrlInput').value = '';
-                rawData = []; filteredData = [];
-                toggleConnectionModal();
-                showEmpty();
-            }
-        }
-        function copyAppsScriptCode() {
-            const c = document.getElementById('appScriptCodeText').innerText;
-            const t = document.createElement('textarea');
-            t.value = c; t.style.position = 'fixed'; t.style.opacity = '0';
-            document.body.appendChild(t); t.select();
-            try {
-                document.execCommand('copy');
-                const b = document.getElementById('copyBtnText');
-                b.innerText = 'คัดลอกสำเร็จ!';
-                setTimeout(() => { b.innerText = 'คัดลอกโค้ด'; }, 2000);
-            } catch (e) { alert('คัดลอกไม่สำเร็จ'); }
-            document.body.removeChild(t);
+
+        function resetToDefault() {
+            localStorage.removeItem('mg_custom_url');
+            webAppUrl = APPS_SCRIPT_URL;
+            document.getElementById('webAppUrlInput').value = webAppUrl;
+            toggleConnectionModal();
+            fetchData();
         }
     </script>
 </body>
