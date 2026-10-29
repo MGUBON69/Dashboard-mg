@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MG Dealer Booking Dashboard & Analytics</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#ecfeff',
+                            100: '#cffaff',
+                            400: '#22d3ee',
+                            500: '#06b6d4',
+                            600: '#0891b2',
+                            900: '#164e63',
+                        },
+                        darkbg: '#0f172a',
+                        darkcard: '#1e293b',
+                        darkborder: '#334155'
+                    },
+                    fontFamily: {
+                        sans: ['Kanit', 'Prompt', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts (Kanit & Prompt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #0b0f19;
+            color: #f1f5f9;
+        }
+        .glow-cyan {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.25);
+        }
+        .glow-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-card:hover {
+            border-color: rgba(6, 182, 212, 0.4);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.15);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #06b6d4;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-10">
+
+    <!-- Header / Navbar -->
+    <header class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-cyan-600 to-teal-400 p-2.5 rounded-xl shadow-lg text-slate-950 font-bold text-xl flex items-center justify-center w-10 h-10">
+                <i class="fa-solid font-bold fa-car-side"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wide text-white flex items-center gap-2">
+                    MG SALES DASHBOARD <span class="text-xs font-normal px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">DEALER BK INPUT V2</span>
+                </h1>
+                <p class="text-xs text-slate-400">ระบบติดตามสถานะการจอง วิเคราะห์ยอดขาย และส่งมอบรถยนต์ MG</p>
+            </div>
+        </div>
+
+        <!-- Action Buttons & Connection Status -->
+        <div class="flex items-center gap-2 sm:gap-3">
+            <button onclick="openAppsScriptModal()" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-900/50 hover:border-cyan-500/50 transition duration-200 flex items-center gap-2">
+                <i class="fa-solid fa-code"></i>
+                <span>วิธีติดตั้ง App Script</span>
+            </button>
+            <button onclick="toggleConnectionModal()" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold shadow-lg shadow-cyan-950/50 transition duration-200 flex items-center gap-2">
+                <i class="fa-solid fa-link"></i>
+                <span id="connBtnText">เชื่อมต่อ Google Sheets</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-[1600px] mx-auto px-4 lg:px-8 pt-6 space-y-6">
+
+        <!-- Banner Alert / Data Sync Bar -->
+        <div id="dataStatusBar" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="relative flex h-3 w-3">
+                  <span id="statusPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span id="statusDot" class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400">สถานะข้อมูล: </span>
+                    <span id="dataStatusText" class="text-sm font-semibold text-emerald-400">ใช้งานข้อมูลจำลอง (Demo Mode)</span>
+                    <span id="lastUpdated" class="text-xs text-slate-500 ml-2"></span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="reloadData()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 border border-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right" id="refreshIcon"></i> รีเฟรชข้อมูล
+                </button>
+            </div>
+        </div>
+
+        <!-- 1. KPI Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Card 1: Total Bookings -->
+            <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
+                <div class="absolute -right-2 -bottom-2 text-slate-800 opacity-30 text-7xl font-bold pointer-events-none">
+                    <i class="fa-solid fa-file-signature"></i>
+                </div>
+                <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">ยอดจองทั้งหมด</div>
+                <div class="text-3xl font-bold text-white tracking-tight" id="kpiTotal">0</div>
+                <div class="text-xs text-cyan-400 mt-2 flex items-center gap-1">
+                    <i class="fa-solid fa-car"></i> รวมทุกรายการใน Sheet
+                </div>
+            </div>
+
+            <!-- Card 2: Delivered -->
+            <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
+                <div class="absolute -right-2 -bottom-2 text-emerald-950 opacity-40 text-7xl font-bold pointer-events-none">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">ส่งมอบแล้ว</div>
+                <div class="text-3xl font-bold text-emerald-400 tracking-tight" id="kpiDelivered">0</div>
+                <div class="text-xs text-emerald-500/80 mt-2 flex items-center gap-1">
+                    <i class="fa-solid fa-circle-check"></i> ปิดการขายสมบูรณ์
+                </div>
+            </div>
+
+            <!-- Card 3: Pending Delivery (This Month) -->
+            <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
+                <div class="absolute -right-2 -bottom-2 text-amber-950 opacity-40 text-7xl font-bold pointer-events-none">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+                <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">รอส่งมอบ (เดือนนี้)</div>
+                <div class="text-3xl font-bold text-amber-400 tracking-tight" id="kpiPendingThisMonth">0</div>
+                <div class="text-xs text-amber-500/80 mt-2 flex items-center gap-1">
+                    <i class="fa-solid fa-calendar-day"></i> ผ่านอนุมัติ พร้อมส่ง
+                </div>
+            </div>
+
+            <!-- Card 4: Pending Delivery (Other Months) -->
+            <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
+                <div class="absolute -right-2 -bottom-2 text-blue-950 opacity-40 text-7xl font-bold pointer-events-none">
+                    <i class="fa-solid fa-calendar-alt"></i>
+                </div>
+                <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">รอส่งมอบ (เดือนอื่น)</div>
+                <div class="text-3xl font-bold text-blue-400 tracking-tight" id="kpiPendingOtherMonth">0</div>
+                <div class="text-xs text-blue-400/80 mt-2 flex items-center gap-1">
+                    <i class="fa-solid fa-hourglass-half"></i> คิวล่วงหน้า / รอรถ
+                </div>
+            </div>
+
+            <!-- Card 5: Canceled -->
+            <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
+                <div class="absolute -right-2 -bottom-2 text-rose-950 opacity-40 text-7xl font-bold pointer-events-none">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                </div>
+                <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">ยกเลิกการจอง</div>
+                <div class="text-3xl font-bold text-rose-400 tracking-tight" id="kpiCanceled">0</div>
+                <div class="text-xs text-rose-500/80 mt-2 flex items-center gap-1">
+                    <i class="fa-solid fa-ban"></i> ถอนจอง / ไม่ผ่านไฟแนนซ์
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Charts Section Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Chart 1: Bookings by Car Model -->
+            <div class="glow-card rounded-2xl p-5 border border-slate-800">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-car text-cyan-400"></i> ยอดจองแยกตามรุ่นรถ
+                    </h3>
+                    <span class="text-xs text-slate-500">คอลัมน์ E (รุ่น)</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="modelChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Booking Status Ratio -->
+            <div class="glow-card rounded-2xl p-5 border border-slate-800">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-cyan-400"></i> สัดส่วนสถานะการจอง
+                    </h3>
+                    <span class="text-xs text-slate-500">คอลัมน์ I (สถานะ)</span>
+                </div>
+                <div class="h-64 relative flex items-center justify-center">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 3: Finance Companies Breakdown -->
+            <div class="glow-card rounded-2xl p-5 border border-slate-800">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-building-columns text-cyan-400"></i> ยอดจองตามสถาบันการเงิน / ไฟแนนซ์
+                    </h3>
+                    <span class="text-xs text-slate-500">คอลัมน์ H (สถาบันการเงิน)</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="financeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 4: Sales Consultant (SC) Performance -->
+            <div class="glow-card rounded-2xl p-5 border border-slate-800">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-user-tie text-cyan-400"></i> ผลงานพนักงานขาย (SC Performance)
+                    </h3>
+                    <span class="text-xs text-slate-500">คอลัมน์ L (SC)</span>
+                </div>
+                <div class="h-64 relative">
+                    <canvas id="scChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Filters & Data Table Section -->
+        <div class="glow-card rounded-2xl border border-slate-800 overflow-hidden">
+            <!-- Filter Bar -->
+            <div class="p-5 border-b border-slate-800 bg-slate-900/60 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-cyan-400"></i> รายการข้อมูลการจองรถ
+                    </h3>
+                    <span id="filteredCountBadge" class="bg-cyan-950 text-cyan-400 border border-cyan-800 text-xs px-2.5 py-0.5 rounded-full font-medium">0 รายการ</span>
+                </div>
+
+                <!-- Dropdown Filters -->
+                <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <!-- Search Input -->
+                    <div class="relative min-w-[200px] flex-1 lg:flex-initial">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="ค้นหาทุกข้อมูล..." class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 outline-none transition">
+                    </div>
+
+                    <!-- Model Filter -->
+                    <select id="filterModel" onchange="applyFilters()" class="bg-slate-950 border border-slate-700 focus:border-cyan-500 text-slate-300 text-xs rounded-xl px-3 py-1.5 outline-none">
+                        <option value="">รุ่นรถทั้งหมด</option>
+                    </select>
+
+                    <!-- Status Filter -->
+                    <select id="filterStatus" onchange="applyFilters()" class="bg-slate-950 border border-slate-700 focus:border-cyan-500 text-slate-300 text-xs rounded-xl px-3 py-1.5 outline-none">
+                        <option value="">สถานะทั้งหมด</option>
+                    </select>
+
+                    <!-- SC Filter -->
+                    <select id="filterSC" onchange="applyFilters()" class="bg-slate-950 border border-slate-700 focus:border-cyan-500 text-slate-300 text-xs rounded-xl px-3 py-1.5 outline-none">
+                        <option value="">พนักงาน (SC) ทั้งหมด</option>
+                    </select>
+
+                    <!-- Reset Filter Button -->
+                    <button onclick="resetFilters()" class="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition" title="ล้างตัวกรอง">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Responsive Wrapper -->
+            <div class="overflow-x-auto max-h-[500px]">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-950/80 text-slate-400 uppercase tracking-wider border-b border-slate-800 sticky top-0 z-10 backdrop-blur-md">
+                        <tr>
+                            <th class="px-4 py-3.5 font-medium">ลำดับ</th>
+                            <th class="px-4 py-3.5 font-medium">รุ่น (E)</th>
+                            <th class="px-4 py-3.5 font-medium">รุ่นย่อย (F)</th>
+                            <th class="px-4 py-3.5 font-medium">สี (G)</th>
+                            <th class="px-4 py-3.5 font-medium">สถาบันการเงิน (H)</th>
+                            <th class="px-4 py-3.5 font-medium">สถานะการจอง (I)</th>
+                            <th class="px-4 py-3.5 font-medium">สถานะรถ (J)</th>
+                            <th class="px-4 py-3.5 font-medium">หมายเหตุ (K)</th>
+                            <th class="px-4 py-3.5 font-medium">SC (L)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="divide-y divide-slate-800/60">
+                        <!-- Rows injected via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal 1: Google Apps Script Setup Instructions & Code -->
+    <div id="scriptModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-brands fa-google-drive text-cyan-400"></i> วิธีติดตั้ง Google Apps Script ใน Google Sheets
+                </h3>
+                <button onclick="closeAppsScriptModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-4 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <div class="bg-cyan-950/40 border border-cyan-800/60 p-4 rounded-xl text-cyan-200">
+                    <p class="font-semibold text-cyan-400 mb-1"><i class="fa-solid fa-lightbulb"></i> คำแนะนำในการใช้งาน:</p>
+                    คัดลอกโค้ดด้านล่างนี้ไปวางใน Google Sheet ของคุณ เพื่อเปิด API สำหรับดึงข้อมูลมาแสดงบน Dashboard
+                </div>
+
+                <ol class="list-decimal list-inside space-y-2 text-slate-300">
+                    <li>เปิด Google Sheet <strong class="text-white">BK_M2</strong> ของคุณ</li>
+                    <li>ไปที่เมนู <strong class="text-white">ส่วนขยาย (Extensions)</strong> &gt; <strong class="text-white">Apps Script</strong></li>
+                    <li>ลบโค้ดเดิมออกทั้งหมด แล้ววางโค้ดด้านล่างนี้ลงไป</li>
+                    <li>กดปุ่ม <strong class="text-white">บันทึก (Save)</strong> <i class="fa-solid fa-floppy-disk"></i></li>
+                    <li>คลิกปุ่ม <strong class="text-emerald-400">ทำให้ใช้งานได้อย่างสะดวก (Deploy)</strong> &gt; <strong class="text-emerald-400">การทำให้ใช้งานได้อย่างสะดวกรายการใหม่ (New Deployment)</strong></li>
+                    <li>เลือกประเภทเป็น <strong class="text-white">เว็บแอป (Web App)</strong></li>
+                    <li>ตั้งค่า <strong>ผู้ที่มีสิทธิ์เข้าถึง (Who has access)</strong> เป็น: <strong class="text-amber-400">ทุกคน (Anyone)</strong></li>
+                    <li>กด Deploy แล้วคัดลอก **Web App URL** มาใส่ในช่องเชื่อมต่อของ Dashboard นี้</li>
+                </ol>
+
+                <div class="relative mt-3">
+                    <div class="flex justify-between items-center bg-slate-950 px-4 py-2 border-t border-x border-slate-800 rounded-t-xl">
+                        <span class="text-xs text-slate-400 font-mono">Code.gs</span>
+                        <button onclick="copyAppsScriptCode()" class="text-xs bg-slate-800 hover:bg-slate-700 text-cyan-400 px-3 py-1 rounded border border-slate-700 flex items-center gap-1.5">
+                            <i class="fa-solid fa-copy"></i> <span id="copyBtnText">คัดลอกโค้ด</span>
+                        </button>
+                    </div>
+                    <pre class="bg-slate-950 p-4 rounded-b-xl text-emerald-400 font-mono text-xs overflow-x-auto border border-slate-800 max-h-60" id="appScriptCodeText">
+function doGet() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName('DEALER BK INPUT V2');
+  
+  if (!sheet) {
+    return ContentService.createTextOutput(JSON.stringify({
+      error: "ไม่พบชีตชื่อ 'DEALER BK INPUT V2'"
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // อ่านข้อมูลตั้งแต่แถวที่ 4 (Row 4) เป็นต้นไป
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 4) {
+    return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // อ่านช่วงคอลัมน์ E ถึง L (Column 5 ถึง 12)
+  var range = sheet.getRange(4, 5, lastRow - 3, 8);
+  var values = range.getValues();
+  
+  var result = [];
+  
+  for (var i = 0; i < values.length; i++) {
+    var row = values[i];
+    var model = row[0] ? row[0].toString().trim() : '';
+    
+    // ข้ามแถวที่ไม่มีข้อมูลรุ่น
+    if (!model) continue;
+    
+    result.push({
+      model: model,                                    // Column E (รุ่น)
+      subModel: row[1] ? row[1].toString().trim() : '',// Column F (รุ่นย่อย)
+      color: row[2] ? row[2].toString().trim() : '',   // Column G (สี)
+      finance: row[3] ? row[3].toString().trim() : '', // Column H (สถาบันการเงิน)
+      status: row[4] ? row[4].toString().trim() : '',  // Column I (สถานะการจอง)
+      carStatus: row[5] ? row[5].toString().trim() : '',// Column J (สถานะรถ)
+      note: row[6] ? row[6].toString().trim() : '',     // Column K (หมายเหตุ)
+      sc: row[7] ? row[7].toString().trim() : ''        // Column L (SC)
+    });
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+</pre>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-800 bg-slate-950/50 flex justify-end">
+                <button onclick="closeAppsScriptModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl transition">
+                    เข้าใจแล้ว / ปิดหน้าต่าง
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Connection URL Modal -->
+    <div id="connModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-link text-cyan-400"></i> ตั้งค่าการเชื่อมต่อ Google Sheets
+                </h3>
+                <button onclick="toggleConnectionModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <label class="block text-slate-300 font-medium">Google Apps Script Web App URL:</label>
+                <input type="text" id="webAppUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xl px-3 py-2 text-slate-200 outline-none">
+                <p class="text-slate-400 text-[11px]">วาง Web App URL ที่ได้จากการ Deploy Apps Script ลงในช่องนี้</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 pt-2">
+                <button onclick="saveAndConnect()" class="flex-1 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold rounded-xl text-xs transition">
+                    บันทึกและเชื่อมต่อ API
+                </button>
+                <button onclick="switchToDemoMode()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium rounded-xl text-xs transition border border-slate-700">
+                    กลับไปใช้ Demo Mode
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Mock Demo Data directly built from the provided image
+        const MOCK_DATA = [
+            { model: "MG3 HYBRID+", subModel: "D", color: "WHITE", finance: "KL กสิกร", status: "ยกเลิก (ระบุเหตุผลในหมายเหตุ)", carStatus: "ไม่มีรถ", note: "ยังไม่พร้อมเซ็นสัญญา", sc: "ครีม" },
+            { model: "MGS5 EV", subModel: "V+", color: "WHITE", finance: "KL กสิกร", status: "ยกเลิก (ระบุเหตุผลในหมายเหตุ)", carStatus: "ไม่มีรถ", note: "ยังไม่พร้อมเซ็นสัญญา", sc: "ครีม" },
+            { model: "MG4 MCE", subModel: "X", color: "WHITE", finance: "AY กรุงศรี", status: "ยกเลิก (ระบุเหตุผลในหมายเหตุ)", carStatus: "ไม่มีรถ", note: "ผ่าน 21-5-69", sc: "ครีม" },
+            { model: "MG4 MCE", subModel: "D", color: "GREEN", finance: "เงินสด", status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ (เดือนอื่น)", carStatus: "ไม่มีรถ", note: "รับรถสิ้นปี 2026", sc: "ครีม" },
+            { model: "MG URBAN", subModel: "MAX", color: "BLACK", finance: "KL กสิกร", status: "ส่งมอบแล้ว", carStatus: "มีรถพร้อม", note: "รับรถวันที่ 9.10.69", sc: "ครีม" },
+            { model: "MG URBAN", subModel: "MAX", color: "GREY", finance: "TTB ธนชาต", status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ (เดือนอื่น)", carStatus: "มีรถพร้อม", note: "พร้อมรับรถวันที่ 14/11/2569", sc: "เบิร์ท" },
+            { model: "MG URBAN", subModel: "MAX", color: "GREY", finance: "TISCO", status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ (เดือนนี้)", carStatus: "มีรถพร้อม", note: "ตัดยอดในเดือนตุลาคม", sc: "บาส" },
+            { model: "MGS5 EV", subModel: "D+", color: "TITANIUM", finance: "เงินสด", status: "ยกเลิก (ระบุเหตุผลในหมายเหตุ)", carStatus: "ไม่มีรถ", note: "ถอนจอง", sc: "ต้อม" },
+            { model: "MG4 MCE", subModel: "X", color: "WHITE", finance: "KL กสิกร", status: "เตรียมเอกสาร รอเซ็นไฟแนนซ์ (ดาวน์15%ขึ้นไป)", carStatus: "ไม่มีรถ", note: "ติดต่อไม่ได้ ยังไม่ยื่น", sc: "เอิร์ท" },
+            { model: "MG URBAN", subModel: "MAX", color: "BEIGE", finance: "เงินสด", status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ (เดือนอื่น)", carStatus: "มีรถพร้อม", note: "รับ31/10/2569", sc: "ต้อม" },
+            { model: "MG URBAN", subModel: "MAX", color: "BEIGE", finance: "เงินสด", status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ (เดือนอื่น)", carStatus: "มีรถพร้อม", note: "รับวันที่ 2/11/2569", sc: "เบิร์ท" },
+            { model: "MGS5 EV", subModel: "X+", color: "TITANIUM", finance: "TISCO", status: "ส่งมอบแล้ว", carStatus: "มีรถพร้อม", note: "ไฟแนนซ์ผ่านแล้วพร้อมรับ", sc: "เอิร์ท" },
+            { model: "MG4 MCE", subModel: "X", color: "WHITE", finance: "KL กสิกร", status: "ส่งมอบแล้ว", carStatus: "มีรถพร้อม", note: "รับรถ 10 10 69", sc: "เอิร์ท" },
+            { model: "MG3 HYBRID+", subModel: "X", color: "RED", finance: "AY กรุงศรี", status: "ไฟแนนซ์อนุมัติแล้ว/เงินสด รอส่งมอบ (เดือนนี้)", carStatus: "มีรถพร้อม", note: "รอส่งมอบสัปดาห์นี้", sc: "บาส" },
+            { model: "MG MAXUS 9", subModel: "V", color: "BLACK", finance: "TTB ธนชาต", status: "ส่งมอบแล้ว", carStatus: "มีรถพร้อม", note: "ส่งมอบเรียบร้อย", sc: "ต้อม" }
+        ];
+
+        // Global Variables
+        let rawData = [];
+        let filteredData = [];
+        let webAppUrl = localStorage.getItem('mg_script_url') || '';
+        
+        // Chart Instances
+        let modelChartInst = null;
+        let statusChartInst = null;
+        let financeChartInst = null;
+        let scChartInst = null;
+
+        // Initialize App
+        window.onload = function() {
+            if (webAppUrl) {
+                document.getElementById('webAppUrlInput').value = webAppUrl;
+                fetchDataFromAppsScript();
+            } else {
+                useDemoData();
+            }
+        };
+
+        // Use Demo Data Function
+        function useDemoData() {
+            rawData = [...MOCK_DATA];
+            updateConnectionStatus(false, "ใช้งานข้อมูลจำลอง (Demo Mode)");
+            processAndRenderData();
+        }
+
+        // Fetch Data from Google Apps Script Web App API
+        function fetchDataFromAppsScript() {
+            if (!webAppUrl) {
+                useDemoData();
+                return;
+            }
+
+            const refreshIcon = document.getElementById('refreshIcon');
+            refreshIcon.classList.add('fa-spin');
+
+            fetch(webAppUrl)
+                .then(res => {
+                    if (!res.ok) throw new Error("Network response was not ok");
+                    return res.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        alert("Google Sheet Error: " + data.error);
+                        useDemoData();
+                    } else if (Array.isArray(data)) {
+                        rawData = data;
+                        updateConnectionStatus(true, "เชื่อมต่อ Google Sheet สำเร็จ!");
+                        processAndRenderData();
+                    } else {
+                        throw new Error("รูปแบบข้อมูลไม่ถูกต้อง");
+                    }
+                })
+                .catch(err => {
+                    console.error("Fetch Error:", err);
+                    alert("ไม่สามารถดึงข้อมูลจาก URL ที่ระบุได้ ระบบจะเปลี่ยนไปใช้ Demo Mode แทน");
+                    useDemoData();
+                })
+                .finally(() => {
+                    refreshIcon.classList.remove('fa-spin');
+                });
+        }
+
+        function reloadData() {
+            if (webAppUrl) {
+                fetchDataFromAppsScript();
+            } else {
+                useDemoData();
+            }
+        }
+
+        // Update Status Indicators
+        function updateConnectionStatus(isLive, message) {
+            const statusDot = document.getElementById('statusDot');
+            const statusPulse = document.getElementById('statusPulse');
+            const statusText = document.getElementById('dataStatusText');
+            const connBtnText = document.getElementById('connBtnText');
+            const lastUpdated = document.getElementById('lastUpdated');
+
+            const now = new Date().toLocaleTimeString('th-TH');
+
+            if (isLive) {
+                statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-emerald-500";
+                statusPulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+                statusText.className = "text-sm font-semibold text-emerald-400";
+                connBtnText.innerText = "เชื่อมต่อแล้ว (ตั้งค่า)";
+            } else {
+                statusDot.className = "relative inline-flex rounded-full h-3 w-3 bg-amber-500";
+                statusPulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
+                statusText.className = "text-sm font-semibold text-amber-400";
+                connBtnText.innerText = "เชื่อมต่อ Google Sheets";
+            }
+            statusText.innerText = message;
+            lastUpdated.innerText = `(อัปเดตล่าสุด: ${now})`;
+        }
+
+        // Process Data & Render UI Elements
+        function processAndRenderData() {
+            populateFilterDropdowns();
+            applyFilters();
+        }
+
+        // Populate Dropdowns dynamically based on raw data
+        function populateFilterDropdowns() {
+            const models = [...new Set(rawData.map(d => d.model).filter(Boolean))];
+            const statuses = [...new Set(rawData.map(d => d.status).filter(Boolean))];
+            const scs = [...new Set(rawData.map(d => d.sc).filter(Boolean))];
+
+            const modelSelect = document.getElementById('filterModel');
+            const statusSelect = document.getElementById('filterStatus');
+            const scSelect = document.getElementById('filterSC');
+
+            modelSelect.innerHTML = '<option value="">รุ่นรถทั้งหมด</option>' + models.map(m => `<option value="${m}">${m}</option>`).join('');
+            statusSelect.innerHTML = '<option value="">สถานะทั้งหมด</option>' + statuses.map(s => `<option value="${s}">${s}</option>`).join('');
+            scSelect.innerHTML = '<option value="">พนักงาน (SC) ทั้งหมด</option>' + scs.map(s => `<option value="${s}">${s}</option>`).join('');
+        }
+
+        // Apply Filters & Search Keyword
+        function applyFilters() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+            const selectedModel = document.getElementById('filterModel').value;
+            const selectedStatus = document.getElementById('filterStatus').value;
+            const selectedSC = document.getElementById('filterSC').value;
+
+            filteredData = rawData.filter(item => {
+                const matchKeyword = !keyword || Object.values(item).some(val => String(val).toLowerCase().includes(keyword));
+                const matchModel = !selectedModel || item.model === selectedModel;
+                const matchStatus = !selectedStatus || item.status === selectedStatus;
+                const matchSC = !selectedSC || item.sc === selectedSC;
+                return matchKeyword && matchModel && matchStatus && matchSC;
+            });
+
+            renderKPIs(filteredData);
+            renderCharts(filteredData);
+            renderTable(filteredData);
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterModel').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterSC').value = '';
+            applyFilters();
+        }
+
+        // 1. Calculate & Render KPI Cards
+        function renderKPIs(data) {
+            const total = data.length;
+            
+            let delivered = 0;
+            let pendingThisMonth = 0;
+            let pendingOtherMonth = 0;
+            let canceled = 0;
+
+            data.forEach(item => {
+                const st = item.status || '';
+                if (st.includes('ส่งมอบแล้ว')) {
+                    delivered++;
+                } else if (st.includes('เดือนนี้')) {
+                    pendingThisMonth++;
+                } else if (st.includes('เดือนอื่น')) {
+                    pendingOtherMonth++;
+                } else if (st.includes('ยกเลิก')) {
+                    canceled++;
+                }
+            });
+
+            document.getElementById('kpiTotal').innerText = total;
+            document.getElementById('kpiDelivered').innerText = delivered;
+            document.getElementById('kpiPendingThisMonth').innerText = pendingThisMonth;
+            document.getElementById('kpiPendingOtherMonth').innerText = pendingOtherMonth;
+            document.getElementById('kpiCanceled').innerText = canceled;
+            document.getElementById('filteredCountBadge').innerText = `${total} รายการ`;
+        }
+
+        // Chart Setup & Styling
+        const chartFont = { family: 'Kanit', size: 11 };
+        Chart.defaults.font.family = 'Kanit';
+        Chart.defaults.color = '#94a3b8';
+
+        // 2. Render Charts
+        function renderCharts(data) {
+            // Data Aggregations
+            const modelCounts = {};
+            const statusCounts = {};
+            const financeCounts = {};
+            const scCounts = {};
+
+            data.forEach(d => {
+                if (d.model) modelCounts[d.model] = (modelCounts[d.model] || 0) + 1;
+                if (d.status) statusCounts[d.status] = (statusCounts[d.status] || 0) + 1;
+                if (d.finance) financeCounts[d.finance] = (financeCounts[d.finance] || 0) + 1;
+                if (d.sc) scCounts[d.sc] = (scCounts[d.sc] || 0) + 1;
+            });
+
+            // 1. Model Chart (Bar)
+            if (modelChartInst) modelChartInst.destroy();
+            modelChartInst = new Chart(document.getElementById('modelChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(modelCounts),
+                    datasets: [{
+                        label: 'จำนวนยอดจอง (คัน)',
+                        data: Object.values(modelCounts),
+                        backgroundColor: '#06b6d4',
+                        borderColor: '#22d3ee',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { stepSize: 1 } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 2. Status Chart (Doughnut)
+            if (statusChartInst) statusChartInst.destroy();
+            statusChartInst = new Chart(document.getElementById('statusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{
+                        data: Object.values(statusCounts),
+                        backgroundColor: [
+                            '#10b981', // ส่งมอบแล้ว
+                            '#fbbf24', // เดือนนี้
+                            '#3b82f6', // เดือนอื่น
+                            '#f43f5e', // ยกเลิก
+                            '#a855f7', // อื่นๆ
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#0f172a'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }
+                    }
+                }
+            });
+
+            // 3. Finance Chart (Horizontal Bar)
+            if (financeChartInst) financeChartInst.destroy();
+            financeChartInst = new Chart(document.getElementById('financeChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(financeCounts),
+                    datasets: [{
+                        label: 'จำนวนเคส',
+                        data: Object.values(financeCounts),
+                        backgroundColor: '#3b82f6',
+                        borderColor: '#60a5fa',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { stepSize: 1 } },
+                        y: { grid: { display: false } }
+                    }
+                }
+            });
+
+            // 4. SC Performance Chart (Bar)
+            if (scChartInst) scChartInst.destroy();
+            scChartInst = new Chart(document.getElementById('scChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(scCounts),
+                    datasets: [{
+                        label: 'ยอดขาย/จอง (คัน)',
+                        data: Object.values(scCounts),
+                        backgroundColor: '#10b981',
+                        borderColor: '#34d399',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { stepSize: 1 } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        // 3. Render Data Table
+        function renderTable(data) {
+            const tbody = document.getElementById('dataTableBody');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-500">ไม่พบข้อมูลตามเงื่อนไขที่ระบุ</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map((item, index) => {
+                // Status Styling Badges
+                let statusBadge = '<span class="px-2 py-1 rounded-md text-[11px] font-medium bg-slate-800 text-slate-300">' + (item.status || '-') + '</span>';
+                if (item.status.includes('ส่งมอบแล้ว')) {
+                    statusBadge = '<span class="px-2 py-1 rounded-md text-[11px] font-medium bg-emerald-950/80 text-emerald-400 border border-emerald-800/50"><i class="fa-solid fa-circle-check mr-1"></i>ส่งมอบแล้ว</span>';
+                } else if (item.status.includes('ยกเลิก')) {
+                    statusBadge = '<span class="px-2 py-1 rounded-md text-[11px] font-medium bg-rose-950/80 text-rose-400 border border-rose-800/50"><i class="fa-solid fa-circle-xmark mr-1"></i>ยกเลิก</span>';
+                } else if (item.status.includes('เดือนนี้')) {
+                    statusBadge = '<span class="px-2 py-1 rounded-md text-[11px] font-medium bg-amber-950/80 text-amber-300 border border-amber-800/50"><i class="fa-solid fa-clock mr-1"></i>รอส่งมอบ (เดือนนี้)</span>';
+                } else if (item.status.includes('เดือนอื่น')) {
+                    statusBadge = '<span class="px-2 py-1 rounded-md text-[11px] font-medium bg-blue-950/80 text-blue-300 border border-blue-800/50"><i class="fa-solid fa-calendar mr-1"></i>รอส่งมอบ (เดือนอื่น)</span>';
+                }
+
+                // Car Availability Badge
+                let carBadge = '<span class="text-slate-400">' + (item.carStatus || '-') + '</span>';
+                if (item.carStatus.includes('มีรถพร้อม')) {
+                    carBadge = '<span class="text-emerald-400 font-medium"><i class="fa-solid fa-check mr-1"></i>มีรถพร้อม</span>';
+                } else if (item.carStatus.includes('ไม่มีรถ')) {
+                    carBadge = '<span class="text-rose-400 font-medium"><i class="fa-solid fa-xmark mr-1"></i>ไม่มีรถ</span>';
+                }
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition border-b border-slate-800/40">
+                        <td class="px-4 py-3 font-mono text-slate-500">${index + 1}</td>
+                        <td class="px-4 py-3 font-semibold text-white">${item.model || '-'}</td>
+                        <td class="px-4 py-3 text-cyan-400 font-mono">${item.subModel || '-'}</td>
+                        <td class="px-4 py-3 text-slate-300">${item.color || '-'}</td>
+                        <td class="px-4 py-3 text-slate-300">${item.finance || '-'}</td>
+                        <td class="px-4 py-3">${statusBadge}</td>
+                        <td class="px-4 py-3">${carBadge}</td>
+                        <td class="px-4 py-3 text-slate-400 max-w-xs truncate" title="${item.note}">${item.note || '-'}</td>
+                        <td class="px-4 py-3 font-medium text-amber-300">${item.sc || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Modal Controllers
+        function openAppsScriptModal() {
+            document.getElementById('scriptModal').classList.remove('hidden');
+        }
+
+        function closeAppsScriptModal() {
+            document.getElementById('scriptModal').classList.add('hidden');
+        }
+
+        function toggleConnectionModal() {
+            const modal = document.getElementById('connModal');
+            modal.classList.toggle('hidden');
+        }
+
+        function saveAndConnect() {
+            const url = document.getElementById('webAppUrlInput').value.trim();
+            if (!url) {
+                alert('กรุณากรอก Web App URL');
+                return;
+            }
+            webAppUrl = url;
+            localStorage.setItem('mg_script_url', webAppUrl);
+            toggleConnectionModal();
+            fetchDataFromAppsScript();
+        }
+
+        function switchToDemoMode() {
+            webAppUrl = '';
+            localStorage.removeItem('mg_script_url');
+            document.getElementById('webAppUrlInput').value = '';
+            toggleConnectionModal();
+            useDemoData();
+        }
+
+        // Copy Code Functionality
+        function copyAppsScriptCode() {
+            const codeText = document.getElementById('appScriptCodeText').innerText;
+            
+            // Clipboard Fallback Strategy
+            const textarea = document.createElement('textarea');
+            textarea.value = codeText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            const copyBtnText = document.getElementById('copyBtnText');
+            copyBtnText.innerText = 'คัดลอกสำเร็จ!';
+            setTimeout(() => {
+                copyBtnText.innerText = 'คัดลอกโค้ด';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
