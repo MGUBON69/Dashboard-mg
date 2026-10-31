@@ -41,7 +41,6 @@
             border-radius: 4px;
         }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-        .status-badge { display: inline-flex; align-items: center; gap: 0.25rem; }
     </style>
 </head>
 <body class="min-h-screen pb-10">
@@ -121,7 +120,8 @@
 
         <!-- Main Content -->
         <div id="mainContent" class="hidden space-y-6">
-            <!-- KPI Cards -->
+
+            <!-- KPI Cards : สถานะการจอง -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div class="glow-card rounded-2xl p-5 border border-slate-800 relative overflow-hidden">
                     <div class="absolute -right-2 -bottom-2 text-slate-800 opacity-30 text-7xl pointer-events-none"><i class="fa-solid fa-file-signature"></i></div>
@@ -155,108 +155,103 @@
                 </div>
             </div>
 
-            <!-- Car Status Dashboard Section -->
+            <!-- ============ แดชบอร์ดสถานะรถ ============ -->
             <div class="bg-gradient-to-br from-slate-900/60 to-slate-800/40 rounded-2xl border border-cyan-900/30 p-6 space-y-4">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-xl shadow-lg text-white">
-                        <i class="fa-solid fa-car-burst text-xl"></i>
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-gradient-to-br from-cyan-500 to-blue-600 p-3 rounded-xl shadow-lg text-white">
+                            <i class="fa-solid fa-car-burst text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-white tracking-wide">แดชบอร์ดสถานะรถ</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">อ้างอิงตามค่า Dropdown คอลัมน์ J : มีรถพร้อม / ได้จัดสรรแล้ว / ส่งรถแล้ว / ไม่มีรถ</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 class="text-xl font-bold text-white tracking-wide">แดชบอร์ดสถานะรถ</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">ติดตามสถานะสต็อกรถและความพร้อมในการส่งมอบ</p>
-                    </div>
+                    <span id="carStatusSummary" class="text-xs text-slate-500 bg-slate-950/60 border border-slate-800 rounded-full px-3 py-1"></span>
                 </div>
 
                 <!-- Car Status KPI Cards -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-slate-950/60 rounded-xl p-4 border border-emerald-900/30 relative overflow-hidden group hover:border-emerald-700/50 transition">
-                        <div class="absolute -right-1 -bottom-1 text-emerald-950 opacity-20 text-6xl pointer-events-none"><i class="fa-solid fa-check-double"></i></div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div class="bg-slate-950/60 rounded-xl p-4 border border-emerald-900/30 hover:border-emerald-700/50 transition relative overflow-hidden">
                         <div class="flex items-center gap-3">
-                            <div class="bg-emerald-950/50 p-2.5 rounded-lg">
-                                <i class="fa-solid fa-car text-emerald-400 text-lg"></i>
-                            </div>
+                            <div class="bg-emerald-950/50 p-2.5 rounded-lg"><i class="fa-solid fa-car text-emerald-400 text-lg"></i></div>
                             <div>
                                 <div class="text-xs text-slate-400 font-medium">มีรถพร้อม</div>
                                 <div class="text-2xl font-bold text-emerald-400" id="carStatusAvailable">0</div>
                             </div>
                         </div>
-                        <div class="mt-2 text-xs text-emerald-500/70 flex items-center gap-1"><i class="fa-solid fa-check-circle"></i> พร้อมส่งมอบทันที</div>
+                        <div class="mt-2 text-[11px] text-emerald-500/70"><i class="fa-solid fa-warehouse mr-1"></i> สต๊อกพร้อมส่งมอบ</div>
                     </div>
-
-                    <div class="bg-slate-950/60 rounded-xl p-4 border border-rose-900/30 relative overflow-hidden group hover:border-rose-700/50 transition">
-                        <div class="absolute -right-1 -bottom-1 text-rose-950 opacity-20 text-6xl pointer-events-none"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="bg-slate-950/60 rounded-xl p-4 border border-amber-900/30 hover:border-amber-700/50 transition relative overflow-hidden">
                         <div class="flex items-center gap-3">
-                            <div class="bg-rose-950/50 p-2.5 rounded-lg">
-                                <i class="fa-solid fa-car-burst text-rose-400 text-lg"></i>
+                            <div class="bg-amber-950/50 p-2.5 rounded-lg"><i class="fa-solid fa-clipboard-check text-amber-400 text-lg"></i></div>
+                            <div>
+                                <div class="text-xs text-slate-400 font-medium">ได้จัดสรรแล้ว</div>
+                                <div class="text-2xl font-bold text-amber-400" id="carStatusAllocated">0</div>
                             </div>
+                        </div>
+                        <div class="mt-2 text-[11px] text-amber-500/70"><i class="fa-solid fa-boxes-stacked mr-1"></i> รอนำเข้าสต๊อก</div>
+                    </div>
+                    <div class="bg-slate-950/60 rounded-xl p-4 border border-sky-900/30 hover:border-sky-700/50 transition relative overflow-hidden">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-sky-950/50 p-2.5 rounded-lg"><i class="fa-solid fa-truck-fast text-sky-400 text-lg"></i></div>
+                            <div>
+                                <div class="text-xs text-slate-400 font-medium">ส่งรถแล้ว</div>
+                                <div class="text-2xl font-bold text-sky-400" id="carStatusDelivered">0</div>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-[11px] text-sky-500/70"><i class="fa-solid fa-flag-checkered mr-1"></i> ส่งมอบรถให้ลูกค้าแล้ว</div>
+                    </div>
+                    <div class="bg-slate-950/60 rounded-xl p-4 border border-rose-900/30 hover:border-rose-700/50 transition relative overflow-hidden">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-rose-950/50 p-2.5 rounded-lg"><i class="fa-solid fa-car-burst text-rose-400 text-lg"></i></div>
                             <div>
                                 <div class="text-xs text-slate-400 font-medium">ไม่มีรถ</div>
                                 <div class="text-2xl font-bold text-rose-400" id="carStatusUnavailable">0</div>
                             </div>
                         </div>
-                        <div class="mt-2 text-xs text-rose-500/70 flex items-center gap-1"><i class="fa-solid fa-clock"></i> รอนำเข้า/ผลิต</div>
+                        <div class="mt-2 text-[11px] text-rose-500/70"><i class="fa-solid fa-hourglass-half mr-1"></i> รอจัดสรร / สั่งผลิต</div>
                     </div>
-
-                    <div class="bg-slate-950/60 rounded-xl p-4 border border-amber-900/30 relative overflow-hidden group hover:border-amber-700/50 transition">
-                        <div class="absolute -right-1 -bottom-1 text-amber-950 opacity-20 text-6xl pointer-events-none"><i class="fa-solid fa-hourglass-half"></i></div>
+                    <div class="bg-slate-950/60 rounded-xl p-4 border border-slate-700/50 hover:border-slate-600/50 transition relative overflow-hidden">
                         <div class="flex items-center gap-3">
-                            <div class="bg-amber-950/50 p-2.5 rounded-lg">
-                                <i class="fa-solid fa-truck-fast text-amber-400 text-lg"></i>
-                            </div>
+                            <div class="bg-slate-800/80 p-2.5 rounded-lg"><i class="fa-solid fa-circle-question text-slate-400 text-lg"></i></div>
                             <div>
-                                <div class="text-xs text-slate-400 font-medium">รอรถ/อยู่ระหว่างขนส่ง</div>
-                                <div class="text-2xl font-bold text-amber-400" id="carStatusWaiting">0</div>
-                            </div>
-                        </div>
-                        <div class="mt-2 text-xs text-amber-500/70 flex items-center gap-1"><i class="fa-solid fa-truck"></i> กำลังดำเนินการ</div>
-                    </div>
-
-                    <div class="bg-slate-950/60 rounded-xl p-4 border border-slate-700/50 relative overflow-hidden group hover:border-slate-600/50 transition">
-                        <div class="absolute -right-1 -bottom-1 text-slate-900 opacity-20 text-6xl pointer-events-none"><i class="fa-solid fa-question"></i></div>
-                        <div class="flex items-center gap-3">
-                            <div class="bg-slate-800/80 p-2.5 rounded-lg">
-                                <i class="fa-solid fa-circle-info text-slate-400 text-lg"></i>
-                            </div>
-                            <div>
-                                <div class="text-xs text-slate-400 font-medium">ยังไม่ระบุสถานะ</div>
+                                <div class="text-xs text-slate-400 font-medium">ไม่ระบุสถานะ</div>
                                 <div class="text-2xl font-bold text-slate-300" id="carStatusUnknown">0</div>
                             </div>
                         </div>
-                        <div class="mt-2 text-xs text-slate-500/70 flex items-center gap-1"><i class="fa-solid fa-circle-question"></i> ต้องตรวจสอบ</div>
+                        <div class="mt-2 text-[11px] text-slate-500/70"><i class="fa-solid fa-pen-to-square mr-1"></i> ยังไม่ได้กรอกใน Sheet</div>
                     </div>
                 </div>
 
                 <!-- Car Status Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
                     <div class="bg-slate-950/60 rounded-xl p-5 border border-slate-800">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-base font-semibold text-white flex items-center gap-2">
                                 <i class="fa-solid fa-chart-pie text-cyan-400"></i> สัดส่วนสถานะรถ
                             </h3>
-                            <div id="carStatusSummary" class="text-xs text-slate-500"></div>
                         </div>
                         <div class="h-64 relative flex items-center justify-center">
                             <canvas id="carStatusChart"></canvas>
                         </div>
                     </div>
-
                     <div class="bg-slate-950/60 rounded-xl p-5 border border-slate-800">
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center justify-between mb-4 gap-3">
                             <h3 class="text-base font-semibold text-white flex items-center gap-2">
                                 <i class="fa-solid fa-chart-bar text-cyan-400"></i> สถานะรถแยกตามรุ่น
                             </h3>
-                            <select id="filterCarStatusModel" onchange="renderCarStatusCharts()" class="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-3 py-1.5 outline-none">
+                            <select id="filterCarStatusModel" onchange="renderCarStatusCharts()" class="bg-slate-900 border border-slate-700 focus:border-cyan-500 text-slate-300 text-xs rounded-lg px-3 py-1.5 outline-none">
                                 <option value="">ทุกรุ่น</option>
                             </select>
                         </div>
-                        <div class="h-64 relative">
-                            <canvas id="carStatusModelChart"></canvas>
-                        </div>
+                        <div class="h-64 relative"><canvas id="carStatusModelChart"></canvas></div>
                     </div>
                 </div>
             </div>
+            <!-- ============ /แดชบอร์ดสถานะรถ ============ -->
 
-            <!-- Charts -->
+            <!-- Charts เดิม -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="glow-card rounded-2xl p-5 border border-slate-800">
                     <div class="flex items-center justify-between mb-4">
@@ -356,7 +351,11 @@
     </div>
 
     <script>
+        // ============================================
+        // 🔑 ลิงก์ Apps Script
+        // ============================================
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNi0U6EDUEk7mcKdDQQItbm5Zy8KvHHfmz21zfDExkydb2IQ3iBW9dOpTfnfrbcabJlQ/exec";
+        // ============================================
 
         let rawData = [], filteredData = [];
         let webAppUrl = localStorage.getItem('mg_custom_url') || APPS_SCRIPT_URL;
@@ -364,7 +363,65 @@
         let modelChartInst = null, statusChartInst = null, financeChartInst = null, scChartInst = null;
         let carStatusChartInst = null, carStatusModelChartInst = null;
 
-        window.onload = function() {
+        // ============================================
+        // 🚗 หมวดสถานะรถ (ตรงกับ Dropdown คอลัมน์ J)
+        // ============================================
+        const CAR_STATUS_ORDER = ['available', 'allocated', 'delivered', 'unavailable', 'unknown'];
+        const CAR_STATUS_META = {
+            available:   { label: 'มีรถพร้อม',     color: '#10b981', badge: 'bg-emerald-950/80 text-emerald-400 border-emerald-800/50', icon: 'fa-car' },
+            allocated:   { label: 'ได้จัดสรรแล้ว', color: '#fbbf24', badge: 'bg-amber-950/80 text-amber-300 border-amber-800/50',       icon: 'fa-clipboard-check' },
+            delivered:   { label: 'ส่งรถแล้ว',     color: '#38bdf8', badge: 'bg-sky-950/80 text-sky-300 border-sky-800/50',             icon: 'fa-truck-fast' },
+            unavailable: { label: 'ไม่มีรถ',       color: '#f43f5e', badge: 'bg-rose-950/80 text-rose-400 border-rose-800/50',          icon: 'fa-car-burst' },
+            unknown:     { label: 'ไม่ระบุสถานะ',  color: '#64748b', badge: 'bg-slate-800 text-slate-400 border-slate-700',             icon: 'fa-circle-question' }
+        };
+
+        function classifyCarStatus(text) {
+            const t = String(text == null ? '' : text).trim();
+            if (!t) return 'unknown';
+
+            // 1) จับคำตรงตัวตาม Dropdown ใน Sheet ก่อน (แม่นยำสุด)
+            switch (t) {
+                case 'มีรถพร้อม':     return 'available';
+                case 'ได้จัดสรรแล้ว': return 'allocated';
+                case 'ส่งรถแล้ว':     return 'delivered';
+                case 'ไม่มีรถ':       return 'unavailable';
+            }
+
+            // 2) คำใกล้เคียง (กันคนพิมพ์เอง)
+            //    ⚠️ ต้องเช็ค "ไม่มี" ก่อนเสมอ เพราะ "ไม่มีรถ" มีคำว่า "มีรถ" อยู่ข้างใน
+            if (/ไม่มี|ไม่พร้อม|sold out|out of stock|no stock/i.test(t)) return 'unavailable';
+            if (/จัดสรร|allocation|allocated/i.test(t))                  return 'allocated';
+            if (/ส่งรถ|ส่งมอบรถ|delivered|shipped/i.test(t))              return 'delivered';
+            if (/รอ|ขนส่ง|กำลังมา|กำลังผลิต|ระหว่างผลิต|สั่งรถ|transit|on the way|backorder/i.test(t)) return 'allocated';
+            if (/มีรถ|พร้อม|stock|สต๊อก|available|ready/i.test(t))        return 'available';
+
+            return 'unknown';
+        }
+
+        function countCarStatus(list) {
+            const c = { available: 0, allocated: 0, delivered: 0, unavailable: 0, unknown: 0 };
+            list.forEach(d => { c[classifyCarStatus(d.carStatus)]++; });
+            return c;
+        }
+
+        // ใช้พิมพ์ใน Console (F12) เพื่อตรวจว่าค่าดิบถูกจัดกลุ่มถูกไหม
+        function debugCarStatus() {
+            const uniq = {};
+            rawData.forEach(d => {
+                const raw = (d.carStatus || '(ว่าง)');
+                uniq[raw] = uniq[raw] || { จำนวน: 0, จัดกลุ่มเป็น: '' };
+                uniq[raw].จำนวน++;
+                uniq[raw].จัดกลุ่มเป็น = CAR_STATUS_META[classifyCarStatus(d.carStatus)].label;
+            });
+            console.table(uniq);
+            return uniq;
+        }
+        window.debugCarStatus = debugCarStatus;
+
+        // ============================================
+        // Lifecycle
+        // ============================================
+        window.onload = function () {
             document.getElementById('webAppUrlInput').value = webAppUrl;
             fetchData();
         };
@@ -437,9 +494,9 @@
 
         function updateStatus(state, msg, lastUpdate) {
             const colors = {
-                connected: ['bg-emerald-500','bg-emerald-400','text-emerald-400'],
-                loading: ['bg-cyan-500','bg-cyan-400','text-cyan-400'],
-                error: ['bg-rose-500','bg-rose-400','text-rose-400']
+                connected: ['bg-emerald-500', 'bg-emerald-400', 'text-emerald-400'],
+                loading:   ['bg-cyan-500', 'bg-cyan-400', 'text-cyan-400'],
+                error:     ['bg-rose-500', 'bg-rose-400', 'text-rose-400']
             };
             const c = colors[state] || colors.loading;
             document.getElementById('statusDot').className = `relative inline-flex rounded-full h-3 w-3 ${c[0]}`;
@@ -468,10 +525,12 @@
             document.getElementById('filterModel').innerHTML = '<option value="">รุ่นทั้งหมด</option>' + models.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
             document.getElementById('filterStatus').innerHTML = '<option value="">สถานะทั้งหมด</option>' + statuses.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
             document.getElementById('filterSC').innerHTML = '<option value="">SC ทั้งหมด</option>' + scs.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
-            
-            // Populate car status model filter
-            const carStatusModels = [...new Set(rawData.map(d => d.model).filter(Boolean))].sort();
-            document.getElementById('filterCarStatusModel').innerHTML = '<option value="">ทุกรุ่น</option>' + carStatusModels.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+
+            // ตัวกรองรุ่นในกราฟสถานะรถ (คงค่าที่เลือกไว้)
+            const sel = document.getElementById('filterCarStatusModel');
+            const cur = sel.value;
+            sel.innerHTML = '<option value="">ทุกรุ่น</option>' + models.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+            if (models.includes(cur)) sel.value = cur;
         }
 
         function applyFilters() {
@@ -486,14 +545,20 @@
                 const m4 = !sc || i.sc === sc;
                 return m1 && m2 && m3 && m4;
             });
-            renderKPIs(); renderCharts(); renderCarStatusDashboard(); renderTable();
+            renderKPIs();
+            renderCarStatusDashboard();
+            renderCharts();
+            renderTable();
         }
 
         function resetFilters() {
-            ['searchInput','filterModel','filterStatus','filterSC'].forEach(id => document.getElementById(id).value = '');
+            ['searchInput', 'filterModel', 'filterStatus', 'filterSC'].forEach(id => document.getElementById(id).value = '');
             applyFilters();
         }
 
+        // ============================================
+        // KPIs
+        // ============================================
         function renderKPIs() {
             const t = filteredData.length;
             let d = 0, ptm = 0, pom = 0, c = 0;
@@ -510,179 +575,6 @@
             document.getElementById('filteredCountBadge').innerText = `${t} รายการ`;
         }
 
-        function renderCarStatusDashboard() {
-            const carStatuses = {
-                available: 0,
-                unavailable: 0,
-                waiting: 0,
-                unknown: 0
-            };
-
-            filteredData.forEach(d => {
-                const cs = (d.carStatus || '').toLowerCase();
-                if (cs.includes('มีรถ') || cs.includes('พร้อม')) {
-                    carStatuses.available++;
-                } else if (cs.includes('ไม่มีรถ') || cs.includes('ไม่พร้อม')) {
-                    carStatuses.unavailable++;
-                } else if (cs.includes('รอ') || cs.includes('ขนส่ง') || cs.includes('ดำเนินการ')) {
-                    carStatuses.waiting++;
-                } else {
-                    carStatuses.unknown++;
-                }
-            });
-
-            animateNum('carStatusAvailable', carStatuses.available);
-            animateNum('carStatusUnavailable', carStatuses.unavailable);
-            animateNum('carStatusWaiting', carStatuses.waiting);
-            animateNum('carStatusUnknown', carStatuses.unknown);
-
-            renderCarStatusCharts();
-        }
-
-        function renderCarStatusCharts() {
-            const carStatuses = {
-                available: 0,
-                unavailable: 0,
-                waiting: 0,
-                unknown: 0
-            };
-
-            filteredData.forEach(d => {
-                const cs = (d.carStatus || '').toLowerCase();
-                if (cs.includes('มีรถ') || cs.includes('พร้อม')) {
-                    carStatuses.available++;
-                } else if (cs.includes('ไม่มีรถ') || cs.includes('ไม่พร้อม')) {
-                    carStatuses.unavailable++;
-                } else if (cs.includes('รอ') || cs.includes('ขนส่ง') || cs.includes('ดำเนินการ')) {
-                    carStatuses.waiting++;
-                } else {
-                    carStatuses.unknown++;
-                }
-            });
-
-            // Car Status Pie Chart
-            const total = carStatuses.available + carStatuses.unavailable + carStatuses.waiting + carStatuses.unknown;
-            document.getElementById('carStatusSummary').innerText = `รวม ${total} คัน`;
-
-            if (carStatusChartInst) carStatusChartInst.destroy();
-            carStatusChartInst = new Chart(document.getElementById('carStatusChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['มีรถพร้อม', 'ไม่มีรถ', 'รอรถ/ขนส่ง', 'ไม่ระบุ'],
-                    datasets: [{
-                        data: [carStatuses.available, carStatuses.unavailable, carStatuses.waiting, carStatuses.unknown],
-                        backgroundColor: ['#10b981', '#f43f5e', '#fbbf24', '#64748b'],
-                        borderWidth: 2,
-                        borderColor: '#0f172a'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                boxWidth: 12,
-                                font: { size: 10 },
-                                padding: 15
-                            }
-                        }
-                    },
-                    animation: { duration: 800 }
-                }
-            });
-
-            // Car Status by Model Bar Chart
-            const filterModel = document.getElementById('filterCarStatusModel').value;
-            const filteredForModel = filterModel ? filteredData.filter(d => d.model === filterModel) : filteredData;
-            
-            const modelStatuses = {};
-            filteredForModel.forEach(d => {
-                if (!d.model) return;
-                if (!modelStatuses[d.model]) {
-                    modelStatuses[d.model] = { available: 0, unavailable: 0, waiting: 0, unknown: 0 };
-                }
-                const cs = (d.carStatus || '').toLowerCase();
-                if (cs.includes('มีรถ') || cs.includes('พร้อม')) {
-                    modelStatuses[d.model].available++;
-                } else if (cs.includes('ไม่มีรถ') || cs.includes('ไม่พร้อม')) {
-                    modelStatuses[d.model].unavailable++;
-                } else if (cs.includes('รอ') || cs.includes('ขนส่ง') || cs.includes('ดำเนินการ')) {
-                    modelStatuses[d.model].waiting++;
-                } else {
-                    modelStatuses[d.model].unknown++;
-                }
-            });
-
-            const models = Object.keys(modelStatuses);
-            const availableData = models.map(m => modelStatuses[m].available);
-            const unavailableData = models.map(m => modelStatuses[m].unavailable);
-            const waitingData = models.map(m => modelStatuses[m].waiting);
-            const unknownData = models.map(m => modelStatuses[m].unknown);
-
-            if (carStatusModelChartInst) carStatusModelChartInst.destroy();
-            carStatusModelChartInst = new Chart(document.getElementById('carStatusModelChart'), {
-                type: 'bar',
-                data: {
-                    labels: models,
-                    datasets: [
-                        {
-                            label: 'มีรถพร้อม',
-                            data: availableData,
-                            backgroundColor: '#10b981',
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'ไม่มีรถ',
-                            data: unavailableData,
-                            backgroundColor: '#f43f5e',
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'รอรถ/ขนส่ง',
-                            data: waitingData,
-                            backgroundColor: '#fbbf24',
-                            borderRadius: 4
-                        },
-                        {
-                            label: 'ไม่ระบุ',
-                            data: unknownData,
-                            backgroundColor: '#64748b',
-                            borderRadius: 4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                boxWidth: 12,
-                                font: { size: 10 },
-                                padding: 10
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            stacked: true,
-                            grid: { display: false }
-                        },
-                        y: {
-                            stacked: true,
-                            beginAtZero: true,
-                            grid: { color: '#1e293b' },
-                            ticks: { stepSize: 1 }
-                        }
-                    },
-                    animation: { duration: 800 }
-                }
-            });
-        }
-
         function animateNum(id, target) {
             const el = document.getElementById(id);
             const start = parseInt(el.textContent) || 0;
@@ -695,6 +587,109 @@
             requestAnimationFrame(u);
         }
 
+        // ============================================
+        // 🚗 แดชบอร์ดสถานะรถ
+        // ============================================
+        function renderCarStatusDashboard() {
+            const c = countCarStatus(filteredData);
+            animateNum('carStatusAvailable', c.available);
+            animateNum('carStatusAllocated', c.allocated);
+            animateNum('carStatusDelivered', c.delivered);
+            animateNum('carStatusUnavailable', c.unavailable);
+            animateNum('carStatusUnknown', c.unknown);
+
+            const total = filteredData.length;
+            const readyPct = total ? Math.round((c.available / total) * 100) : 0;
+            document.getElementById('carStatusSummary').innerText =
+                `รวม ${total} คัน • พร้อมส่ง ${readyPct}%`;
+
+            renderCarStatusCharts();
+        }
+
+        function renderCarStatusCharts() {
+            const c = countCarStatus(filteredData);
+
+            // ----- Doughnut: สัดส่วนสถานะรถ -----
+            if (carStatusChartInst) carStatusChartInst.destroy();
+            carStatusChartInst = new Chart(document.getElementById('carStatusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: CAR_STATUS_ORDER.map(k => CAR_STATUS_META[k].label),
+                    datasets: [{
+                        data: CAR_STATUS_ORDER.map(k => c[k]),
+                        backgroundColor: CAR_STATUS_ORDER.map(k => CAR_STATUS_META[k].color),
+                        borderWidth: 2,
+                        borderColor: '#0f172a',
+                        cutout: '62%'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 }, padding: 12 } },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                    const pct = total ? Math.round((ctx.parsed / total) * 100) : 0;
+                                    return ` ${ctx.label}: ${ctx.parsed} คัน (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: { duration: 800 }
+                }
+            });
+
+            // ----- Stacked bar: สถานะรถแยกตามรุ่น -----
+            const fm = document.getElementById('filterCarStatusModel').value;
+            const list = fm ? filteredData.filter(d => d.model === fm) : filteredData;
+
+            const byModel = {};
+            list.forEach(d => {
+                if (!d.model) return;
+                if (!byModel[d.model]) {
+                    byModel[d.model] = { available: 0, allocated: 0, delivered: 0, unavailable: 0, unknown: 0 };
+                }
+                byModel[d.model][classifyCarStatus(d.carStatus)]++;
+            });
+
+            const models = Object.keys(byModel).sort((a, b) => {
+                const sum = o => Object.values(o).reduce((x, y) => x + y, 0);
+                return sum(byModel[b]) - sum(byModel[a]);
+            });
+
+            if (carStatusModelChartInst) carStatusModelChartInst.destroy();
+            carStatusModelChartInst = new Chart(document.getElementById('carStatusModelChart'), {
+                type: 'bar',
+                data: {
+                    labels: models,
+                    datasets: CAR_STATUS_ORDER.map(k => ({
+                        label: CAR_STATUS_META[k].label,
+                        data: models.map(m => byModel[m][k]),
+                        backgroundColor: CAR_STATUS_META[k].color,
+                        borderRadius: 4
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 }, padding: 10 } }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 9 } } },
+                        y: { stacked: true, beginAtZero: true, grid: { color: '#1e293b' }, ticks: { stepSize: 1, precision: 0 } }
+                    },
+                    animation: { duration: 800 }
+                }
+            });
+        }
+
+        // ============================================
+        // Charts เดิม
+        // ============================================
         Chart.defaults.font.family = 'Kanit';
         Chart.defaults.color = '#94a3b8';
 
@@ -718,7 +713,7 @@
             if (statusChartInst) statusChartInst.destroy();
             statusChartInst = new Chart(document.getElementById('statusChart'), {
                 type: 'doughnut',
-                data: { labels: Object.keys(sc2), datasets: [{ data: Object.values(sc2), backgroundColor: ['#10b981','#fbbf24','#3b82f6','#f43f5e','#a855f7'], borderWidth: 2, borderColor: '#0f172a' }] },
+                data: { labels: Object.keys(sc2), datasets: [{ data: Object.values(sc2), backgroundColor: ['#10b981', '#fbbf24', '#3b82f6', '#f43f5e', '#a855f7'], borderWidth: 2, borderColor: '#0f172a' }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } } }, animation: { duration: 800 } }
             });
 
@@ -730,7 +725,7 @@
             });
 
             if (scChartInst) scChartInst.destroy();
-            const scKeys = Object.keys(scc).sort((a,b) => scc[b] - scc[a]);
+            const scKeys = Object.keys(scc).sort((a, b) => scc[b] - scc[a]);
             scChartInst = new Chart(document.getElementById('scChart'), {
                 type: 'bar',
                 data: { labels: scKeys, datasets: [{ label: 'คัน', data: scKeys.map(k => scc[k]), backgroundColor: '#10b981', borderRadius: 6 }] },
@@ -738,6 +733,9 @@
             });
         }
 
+        // ============================================
+        // Table
+        // ============================================
         function renderTable() {
             const tb = document.getElementById('dataTableBody');
             if (filteredData.length === 0) {
@@ -751,13 +749,29 @@
                 else if (i.status.includes('ยกเลิก') || sl.includes('ไม่ผ่าน')) sb = `<span class="px-2 py-1 rounded-md text-[11px] font-medium bg-rose-950/80 text-rose-400 border border-rose-800/50"><i class="fa-solid fa-circle-xmark mr-1"></i>${i.status.includes('ไม่ผ่าน') ? 'ไม่ผ่านเงื่อนไข' : 'ยกเลิก'}</span>`;
                 else if (i.status.includes('เดือนนี้')) sb = `<span class="px-2 py-1 rounded-md text-[11px] font-medium bg-amber-950/80 text-amber-300 border border-amber-800/50"><i class="fa-solid fa-clock mr-1"></i>เดือนนี้</span>`;
                 else if (i.status.includes('เดือนอื่น')) sb = `<span class="px-2 py-1 rounded-md text-[11px] font-medium bg-blue-950/80 text-blue-300 border border-blue-800/50"><i class="fa-solid fa-calendar mr-1"></i>เดือนอื่น</span>`;
-                let cb = `<span class="text-slate-400">${esc(i.carStatus || '-')}</span>`;
-                if (i.carStatus.includes('มีรถพร้อม')) cb = `<span class="text-emerald-400 font-medium"><i class="fa-solid fa-check mr-1"></i>มีรถ</span>`;
-                else if (i.carStatus.includes('ไม่มีรถ')) cb = `<span class="text-rose-400 font-medium"><i class="fa-solid fa-xmark mr-1"></i>ไม่มีรถ</span>`;
-                return `<tr class="hover:bg-slate-800/40 transition"><td class="px-4 py-3 font-mono text-slate-500">${idx+1}</td><td class="px-4 py-3 font-semibold text-white">${esc(i.model || '-')}</td><td class="px-4 py-3 text-cyan-400 font-mono">${esc(i.subModel || '-')}</td><td class="px-4 py-3">${esc(i.color || '-')}</td><td class="px-4 py-3">${esc(i.finance || '-')}</td><td class="px-4 py-3">${sb}</td><td class="px-4 py-3">${cb}</td><td class="px-4 py-3 text-slate-400 max-w-xs truncate" title="${esc(i.note)}">${esc(i.note || '-')}</td><td class="px-4 py-3 font-medium text-amber-300">${esc(i.sc || '-')}</td></tr>`;
+
+                // ★ Badge สถานะรถ - จัดกลุ่มด้วย classifyCarStatus (แก้บั๊ก "ไม่มีรถ")
+                const csKey = classifyCarStatus(i.carStatus);
+                const cm = CAR_STATUS_META[csKey];
+                const cb = `<span class="px-2 py-1 rounded-md text-[11px] font-medium border ${cm.badge}"><i class="fa-solid ${cm.icon} mr-1"></i>${esc(i.carStatus || 'ไม่ระบุ')}</span>`;
+
+                return `<tr class="hover:bg-slate-800/40 transition">
+                    <td class="px-4 py-3 font-mono text-slate-500">${idx + 1}</td>
+                    <td class="px-4 py-3 font-semibold text-white">${esc(i.model || '-')}</td>
+                    <td class="px-4 py-3 text-cyan-400 font-mono">${esc(i.subModel || '-')}</td>
+                    <td class="px-4 py-3">${esc(i.color || '-')}</td>
+                    <td class="px-4 py-3">${esc(i.finance || '-')}</td>
+                    <td class="px-4 py-3">${sb}</td>
+                    <td class="px-4 py-3">${cb}</td>
+                    <td class="px-4 py-3 text-slate-400 max-w-xs truncate" title="${esc(i.note)}">${esc(i.note || '-')}</td>
+                    <td class="px-4 py-3 font-medium text-amber-300">${esc(i.sc || '-')}</td>
+                </tr>`;
             }).join('');
         }
 
+        // ============================================
+        // Utils / Modal
+        // ============================================
         function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
         function toggleConnectionModal() {
