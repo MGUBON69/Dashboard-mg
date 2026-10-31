@@ -59,9 +59,11 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
+            <!-- ปุ่มรีเฟรช -->
             <button onclick="reloadData()" id="reloadBtn" class="px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-cyan-900/50 transition flex items-center gap-2">
                 <i class="fa-solid fa-rotate-right" id="refreshIcon"></i> รีเฟรช
             </button>
+            <!-- ปุ่มเปลี่ยนลิงก์ (ซ่อนไว้ กดได้ถ้าต้องการ) -->
             <button onclick="toggleConnectionModal()" class="p-2 rounded-xl text-xs bg-slate-800/50 hover:bg-slate-700 text-slate-500 hover:text-slate-300 transition" title="เปลี่ยนการเชื่อมต่อ">
                 <i class="fa-solid fa-gear"></i>
             </button>
@@ -230,7 +232,7 @@
         </div>
     </main>
 
-    <!-- Modal: เปลี่ยนลิงก์ -->
+    <!-- Modal: เปลี่ยนลิงก์ (เผื่อต้องการแก้ไข) -->
     <div id="connModal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
@@ -254,13 +256,18 @@
     </div>
 
     <script>
+        // ============================================
+        // 🔑 ใส่ลิงก์ Apps Script ของคุณตรงนี้ (สำคัญ!)
+        // ============================================
         const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNi0U6EDUEk7mcKdDQQItbm5Zy8KvHHfmz21zfDExkydb2IQ3iBW9dOpTfnfrbcabJlQ/exec";
+        // ============================================
 
         let rawData = [], filteredData = [];
         let webAppUrl = localStorage.getItem('mg_custom_url') || APPS_SCRIPT_URL;
         let isLoading = false;
         let modelChartInst = null, statusChartInst = null, financeChartInst = null, scChartInst = null;
 
+        // ✅ ดึงข้อมูลทันทีเมื่อโหลดหน้า
         window.onload = function() {
             document.getElementById('webAppUrlInput').value = webAppUrl;
             fetchData();
@@ -435,52 +442,11 @@
                 options: { ...bo, scales: { y: { beginAtZero: true, grid: { color: '#1e293b' }, ticks: { stepSize: 1 } }, x: { grid: { display: false } } } }
             });
 
-            // ✅ แก้ไขส่วนนี้: กำหนดสีให้แตกต่างกันอย่างชัดเจน และตรงกับสถานะ
-            const distinctColors = [
-                '#10b981', // Emerald (ส่งมอบแล้ว)
-                '#f59e0b', // Amber (รอส่งมอบ เดือนนี้)
-                '#3b82f6', // Blue (รอส่งมอบ เดือนอื่น)
-                '#f43f5e', // Rose (ยกเลิก / ไม่ผ่าน)
-                '#06b6d4', // Cyan
-                '#8b5cf6', // Violet
-                '#ec4899', // Pink
-                '#14b8a6', // Teal
-                '#f97316', // Orange
-                '#6366f1'  // Indigo
-            ];
-
-            const statusLabels = Object.keys(sc2);
-            const chartColors = statusLabels.map((label, index) => {
-                const lowerLabel = label.toLowerCase();
-                if (lowerLabel.includes('ส่งมอบ')) return '#10b981';
-                if (lowerLabel.includes('เดือนนี้')) return '#f59e0b';
-                if (lowerLabel.includes('เดือนอื่น')) return '#3b82f6';
-                if (lowerLabel.includes('ยกเลิก') || lowerLabel.includes('ไม่ผ่าน') || lowerLabel.includes('ปฏิเสธ')) return '#f43f5e';
-                // หากไม่ตรงกับเงื่อนไขข้างต้น ให้วนใช้สีจากชุดสีที่แตกต่างกัน
-                return distinctColors[index % distinctColors.length];
-            });
-
             if (statusChartInst) statusChartInst.destroy();
             statusChartInst = new Chart(document.getElementById('statusChart'), {
                 type: 'doughnut',
-                data: { 
-                    labels: statusLabels, 
-                    datasets: [{ 
-                        data: Object.values(sc2), 
-                        backgroundColor: chartColors, 
-                        borderWidth: 2, 
-                        borderColor: '#0f172a',
-                        hoverOffset: 8 // เพิ่มเอฟเฟกต์เด้งออกเมื่อชี้เมาส์
-                    }] 
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    plugins: { 
-                        legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 }, padding: 15, color: '#cbd5e1' } } 
-                    }, 
-                    animation: { duration: 800 } 
-                }
+                data: { labels: Object.keys(sc2), datasets: [{ data: Object.values(sc2), backgroundColor: ['#10b981','#fbbf24','#3b82f6','#f43f5e','#a855f7'], borderWidth: 2, borderColor: '#0f172a' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } } }, animation: { duration: 800 } }
             });
 
             if (financeChartInst) financeChartInst.destroy();
