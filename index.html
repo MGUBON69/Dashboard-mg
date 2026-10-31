@@ -164,7 +164,7 @@
                         </div>
                         <div>
                             <h2 class="text-xl font-bold text-white tracking-wide">แดชบอร์ดสถานะรถ</h2>
-                            <p class="text-xs text-slate-400 mt-0.5">อ้างอิงตามค่า Dropdown คอลัมน์ J : มีรถพร้อม / ได้จัดสรรแล้ว / ส่งรถแล้ว / ไม่มีรถ</p>
+                            <p class="text-xs text-slate-400 mt-0.5">อ้างอิงตามค่า Dropdown คอลัมน์ J : มีรถพร้อม / ได้จัดสรรแล้ว / สั่งรถแล้ว / ไม่มีรถ</p>
                         </div>
                     </div>
                     <span id="carStatusSummary" class="text-xs text-slate-500 bg-slate-950/60 border border-slate-800 rounded-full px-3 py-1"></span>
@@ -196,11 +196,11 @@
                         <div class="flex items-center gap-3">
                             <div class="bg-sky-950/50 p-2.5 rounded-lg"><i class="fa-solid fa-truck-fast text-sky-400 text-lg"></i></div>
                             <div>
-                                <div class="text-xs text-slate-400 font-medium">ส่งรถแล้ว</div>
+                                <div class="text-xs text-slate-400 font-medium">สั่งรถแล้ว</div>
                                 <div class="text-2xl font-bold text-sky-400" id="carStatusDelivered">0</div>
                             </div>
                         </div>
-                        <div class="mt-2 text-[11px] text-sky-500/70"><i class="fa-solid fa-flag-checkered mr-1"></i> ส่งมอบรถให้ลูกค้าแล้ว</div>
+                        <div class="mt-2 text-[11px] text-sky-500/70"><i class="fa-solid fa-flag-checkered mr-1"></i> รอรถ </div>
                     </div>
                     <div class="bg-slate-950/60 rounded-xl p-4 border border-rose-900/30 hover:border-rose-700/50 transition relative overflow-hidden">
                         <div class="flex items-center gap-3">
@@ -370,7 +370,7 @@
         const CAR_STATUS_META = {
             available:   { label: 'มีรถพร้อม',     color: '#10b981', badge: 'bg-emerald-950/80 text-emerald-400 border-emerald-800/50', icon: 'fa-car' },
             allocated:   { label: 'ได้จัดสรรแล้ว', color: '#fbbf24', badge: 'bg-amber-950/80 text-amber-300 border-amber-800/50',       icon: 'fa-clipboard-check' },
-            delivered:   { label: 'ส่งรถแล้ว',     color: '#38bdf8', badge: 'bg-sky-950/80 text-sky-300 border-sky-800/50',             icon: 'fa-truck-fast' },
+            delivered:   { label: 'สั่งรถแล้ว',     color: '#38bdf8', badge: 'bg-sky-950/80 text-sky-300 border-sky-800/50',             icon: 'fa-truck-fast' },
             unavailable: { label: 'ไม่มีรถ',       color: '#f43f5e', badge: 'bg-rose-950/80 text-rose-400 border-rose-800/50',          icon: 'fa-car-burst' },
             unknown:     { label: 'ไม่ระบุสถานะ',  color: '#64748b', badge: 'bg-slate-800 text-slate-400 border-slate-700',             icon: 'fa-circle-question' }
         };
@@ -383,7 +383,7 @@
             switch (t) {
                 case 'มีรถพร้อม':     return 'available';
                 case 'ได้จัดสรรแล้ว': return 'allocated';
-                case 'ส่งรถแล้ว':     return 'delivered';
+                case 'สั่งรถแล้ว':     return 'delivered';
                 case 'ไม่มีรถ':       return 'unavailable';
             }
 
